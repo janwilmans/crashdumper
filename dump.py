@@ -68,8 +68,8 @@ def filterInfo(content):
 
 def analyze(filename):
     info = utfDecode(extractInfoFromCrashdump(filename))
-    for l in info:
-        print (l)
+    #for l in info:
+    #    print (l)
     print ("--- Summary ---\n\n")
     print ("Process information:")
     for e in filterInfo(info):
@@ -87,8 +87,9 @@ def getFiles(mask):
     if os.path.isdir(mask):
         result = []
         for root, dirs, files in os.walk(mask, topdown=False):
-           for name in files:
-              result += [os.path.join(root, name)]
+            for name in files:
+                if name.endswith(".dmp"):
+                    result += [os.path.join(root, name)]
         return result
 
     # otherwise assume is a filespec mask like *.dmp
@@ -99,9 +100,10 @@ def getRealFiles(mask):
 
 def main2():
     if len(sys.argv) < 2:
-        print("Usage: dump.py <filename|mask")
+        print("Usage: dump.py <dir\filemask>")
         print("  ex: dump.py foo.dmp")
         print("  ex: dump.py foo\*.dmp")
+        print("  ex: dump.py foo\  # will do a recursive scan for *.dmp")
         sys.exit(1)
 
     for filename in getRealFiles(sys.argv[1]):

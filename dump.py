@@ -20,7 +20,7 @@ def wipeLinesInclusive(content, needle):
 def extractInfoFromCrashdump(filename):
     sub_env = os.environ.copy()
     sub_env["_NT_SYMBOL_PATH"] = "srv*c:\Symbols*http://msdl.microsoft.com/download/symbols;."
-    cmd = ['d:\msdbg\kd.exe', '-z', filename, '-c', 'ld *;!peb;!dlls;!runaway 4;!uniqstack;q'] # ; !analyze -v
+    cmd = ['d:\msdbg\kd.exe', '-z', filename, '-c', 'ld *;!peb;!dlls;!runaway 4;!uniqstack;!analyze -v;q'] # ; 
     proc = subprocess.Popen(cmd, env=sub_env, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return proc.stdout.readlines()
 
@@ -30,6 +30,18 @@ def filterPeb(content):
     t1 = wipeLinesInclusive(t1, "Base TimeStamp                     Module")
     result = []
     for line in t1[:20]:
+        result += [line]
+    return result
+
+def isBlank(str):
+    return not (str and str.strip())
+
+def filterUnhandledException(content):
+    t1 = wipeLinesInclusive(content, "STACK_TEXT:")
+    result = []
+    for line in t1:
+        if isBlank(line):
+            break
         result += [line]
     return result
 
@@ -67,17 +79,25 @@ def filterInfo(content):
     return result
 
 def analyze(filename):
+    print ("Extracting information for", filename)
     info = utfDecode(extractInfoFromCrashdump(filename))
+    
+    # for debugging
     #for l in info:
     #    print (l)
+        
     print ("--- Summary ---\n\n")
     print ("Process information:")
     for e in filterInfo(info):
         print (e)
     
-    print ("\nLoaded modules:")
-    for e in filterPeb(info):
+    print ("Unhandled exception call stack:")
+    for e in filterUnhandledException(info):
         print (e)
+
+    #print ("\nLoaded modules:")
+    #for e in filterPeb(info):
+    #    print (e)
 
 def getFiles(mask):
 

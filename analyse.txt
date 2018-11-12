@@ -1,0 +1,7 @@
+ld *
+!peb
+!analyze -v
+!dlls
+!runaway 4
+~* k
+q

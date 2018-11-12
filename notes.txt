@@ -1,0 +1,52 @@
+http://windbg.info/doc/1-common-cmds.html
+
+.sympath srv*c:\Symbols*http://msdl.microsoft.com/download/symbols;c:\temp\pmp
+.sympath+ c:\temp\pmp
+ld *
+!analyze -v 
+
+more info
+!runaway 4 	- show start times of all threads
+!gle		- get last error
+
+last actions feiBBoxLib specific)
+LASTACTION = BRICKSTATE_DISCONNECTED | 2016-10-07T09:15:41.472870 | HalCcbOptics | 0n7 
+
+dt feiBBoxLib!g_lastActionName _Bx._Ptr;dt feiBBoxLib!g_lastActionTime _Bx._Ptr;dt feiBBoxLib!g_lastActorName _Bx._Ptr;dt feiBBoxLib!g_lastActionId
+
+
+·         Open in windbg
+
+·         zorg dat symbolpath goed staat: srv*c:\symbols*\\ach5324\tem_tpq\_SymbolStore
+
+·         command: kv
+
+ChildEBP RetAddr  Args to Child             
+
+0cedd0d0 77d28467 00030a8c 00000001 00000000 ntdll!ZwWaitForSingleObject+0x15 (FPO: [3,0,0])
+
+0cedd154 77d28595 0cedd2f4 0cedd344 00000000 ntdll!RtlReportExceptionEx+0x14b (FPO: [Non-Fpo])
+
+0cedd1ac 77d4e5e6 0cedd2f4 0cedd344 00000000 ntdll!RtlReportException+0x86 (FPO: [Non-Fpo])
+
+0cedd1c0 77d4e663 c0000374 0cedd1f4 77cf20b4 ntdll!RtlpTerminateFailureFilter+0x14 (FPO: [Non-Fpo])
+
+0cedd1cc 77cf20b4 00000000 0cedd820 77cacfb0 ntdll!RtlReportCriticalFailure+0x67 (FPO: [SEH])
+
+0cedd1e0 77cf1f59 00000000 00000000 00000000 ntdll!_EH4_CallFilterFunc+0x12 (FPO: [Uses EBP] [0,0,4])
+
+0cedd208 77cc6ab9 fffffffe 0cedd810 0cedd344 ntdll!_except_handler4+0x8e (FPO: [Non-Fpo])
+
+0cedd22c 77cc6a8b 0cedd2f4 0cedd810 0cedd344 ntdll!ExecuteHandler2+0x26 (FPO: [Uses EBP] [5,3,1])
+
+0cedd250 77cc6a2d 0cedd2f4 0cedd810 0cedd344 ntdll!ExecuteHandler+0x24 (FPO: [5,0,3])
+
+0cedd2dc 77c90143 00edd2f4 0cedd344 0cedd2f4 ntdll!RtlDispatchException+0x127 (FPO: [Non-Fpo])
+
+0cedd2dc 00000000 00edd2f4 0cedd344 0cedd2f4 ntdll!KiUserExceptionDispatcher+0xf (FPO: [2,0,0]) (CONTEXT @ 00000008)
+
+ 
+
+·         Switch to context record (tweede argument van KiUserExceptionDispatcher)  command: .cxr 0cedd344
+
+·         type k to display callstack (or press alt-6 to open callstack window)

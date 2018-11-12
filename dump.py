@@ -17,10 +17,14 @@ def wipeLinesInclusive(content, needle):
             break
     return content[lineNr:]
     
-def extractInfoFromCrashdump(filename):
+def extractInfoFromCrashdump(filename, analyse=False):
     sub_env = os.environ.copy()
     sub_env["_NT_SYMBOL_PATH"] = "srv*c:\Symbols*http://msdl.microsoft.com/download/symbols;."
-    cmd = ['d:\msdbg\kd.exe', '-z', filename, '-c', 'ld *;!peb;!dlls;!runaway 4;!uniqstack;!analyze -v;q'] # ; 
+    
+    cmd = ['d:\msdbg\kd.exe', '-z', filename, '-c', 'ld *;!peb;!dlls;!runaway 4;!uniqstack;q']
+    if analyse:
+        cmd = ['d:\msdbg\kd.exe', '-z', filename, '-c', 'ld *;!peb;!dlls;!runaway 4;!uniqstack;!analyze -v;q']
+    
     proc = subprocess.Popen(cmd, env=sub_env, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return proc.stdout.readlines()
 
@@ -69,35 +73,63 @@ def simpleAdd(result, line, needle):
         else:
             result += [ [ line, None ] ]
 
+def simpleEnv(result, line, needle):
+    if line.lower().startswith(needle.lower() + "="):
+        cols = line.split("=")
+        if len(cols) > 1:
+            result += [ [ cleanup(cols[0]), cleanup("=".join(cols[1:])) ] ] 
+        else:
+            result += [ [ line, None ] ]
+
 def filterInfo(content):
     result = []
     for line in content:
         simpleAdd(result, line, "commandline")
-        simpleAdd(result, line, "machine")
+        simpleAdd(result, line, "machine name")
         simpleAdd(result, line, "time:")
         simpleAdd(result, line, "dllpath:")
+        simpleEnv(result, line, "USERNAME")
+        simpleEnv(result, line, "COMPUTERNAME")
     return result
 
 def analyze(filename):
+    
+    processInfo = True
+    dumpUnhandledExceptions = False
+    verbose = False
+    modules = False
+    
+    for arg in sys.argv:
+        if arg == "-e":  
+            dumpUnhandledExceptions = True
+        if arg == "-v":  
+            verbose = True
+        if arg == "-m":  
+            modules = True
+    
     print ("Extracting information for", filename)
-    info = utfDecode(extractInfoFromCrashdump(filename))
+    info = utfDecode(extractInfoFromCrashdump(filename, dumpUnhandledExceptions))
     
-    # for debugging
-    #for l in info:
-    #    print (l)
-        
-    print ("--- Summary ---\n\n")
-    print ("Process information:")
-    for e in filterInfo(info):
-        print (e)
+    if verbose:
+        # for debugging
+        for l in info:
+            print (l)
+        print ("--- Summary ---\n\n")
     
-    print ("Unhandled exception call stack:")
-    for e in filterUnhandledException(info):
-        print (e)
+    if processInfo:
+        print ("Process information:")
+        for e in filterInfo(info):
+            print (e)
 
-    #print ("\nLoaded modules:")
-    #for e in filterPeb(info):
-    #    print (e)
+    if dumpUnhandledExceptions:
+        print ("Unhandled exception call stack:")
+        for e in filterUnhandledException(info):
+            print (e)
+
+    if modules:
+        print ("\nLoaded modules:")
+        for e in filterPeb(info):
+            print (e)
 
 def getFiles(mask):
 
